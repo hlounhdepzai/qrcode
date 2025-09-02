@@ -5,45 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Scanner & Creator</title>
     <style>
+        :root {
+            --primary-color: #00ff7f; /* Màu xanh lá cây sáng */
+            --dark-bg: #121212;
+            --dark-card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --border-color: #00ff7f;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
+            padding: 20px;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            overflow: auto; /* Cho phép cuộn khi nội dung dài */
+            min-height: 100vh;
+            box-sizing: border-box;
         }
+
+        /* ----- Landing Page Styles ----- */
+        #landing-page {
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            background-color: var(--dark-card-bg);
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 25px rgba(0, 255, 127, 0.3);
+            display: flex; /* Mặc định hiển thị */
+            flex-direction: column;
+            align-items: center;
+        }
+        #landing-page h1 {
+            color: var(--primary-color);
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        #landing-page .button-group {
+            display: flex;
+            gap: 20px; /* Khoảng cách giữa các nút */
+        }
+        #landing-page .landing-button {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 15px 35px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #landing-page .landing-button:hover,
+        #landing-page .landing-button.active {
+            background-color: var(--primary-color);
+            color: var(--dark-bg);
+        }
+
+        /* ----- Main App Container (Hidden by default) ----- */
         #main-container {
             width: 100%;
             max-width: 800px;
-            padding: 20px;
-            box-sizing: border-box;
-            background-color: #1a1a1a;
+            background-color: var(--dark-card-bg);
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 255, 127, 0.5); /* Shadow xanh lá */
-            margin-top: 20px; /* Thêm margin để không bị dính vào mép trên */
-            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 127, 0.5);
+            display: none; /* Ẩn ban đầu */
+            flex-direction: column;
+            overflow: hidden;
         }
-        h1 {
-            color: #00ff7f; /* Màu xanh lá cây sáng */
+        #main-container h1 {
+            color: var(--primary-color);
             text-align: center;
             margin-bottom: 25px;
+            padding-top: 20px;
         }
         #mode-selector {
             display: flex;
             justify-content: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            background-color: rgba(0,0,0,0.2);
+            padding: 10px;
         }
         #mode-selector button {
             background-color: #333;
             color: #fff;
             padding: 12px 25px;
-            border: 1px solid #00ff7f;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
@@ -52,234 +103,86 @@
         }
         #mode-selector button.active,
         #mode-selector button:hover {
-            background-color: #00ff7f;
+            background-color: var(--primary-color);
             color: #1a1a1a;
         }
-
-        /* Scanner Styles */
-        #scanner-section {
-            display: none; /* Ẩn ban đầu */
-            flex-direction: column;
-            align-items: center;
-        }
-        #video-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            height: 400px; /* Chiều cao cố định cho video */
-            overflow: hidden;
-            background-color: #000;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Đảm bảo video lấp đầy container */
-            display: block;
-        }
-        #scanned-text-overlay {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: #00ff7f;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-            max-width: 90%;
-            word-wrap: break-word;
-            border: 1px solid #00ff7f;
+        
+        /* Styles for Scanner and Creator sections are the same as before */
+        /* --- Dán các style của creator-section và scanner-section vào đây --- */
+        #scanner-section, #creator-section {
             display: none;
-        }
-        #scan-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 250px;
-            height: 250px;
-            transform: translate(-50%, -50%);
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-        }
-        #permission-prompt {
-            padding: 20px;
-            text-align: center;
-        }
-        #permission-prompt button {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #permission-prompt button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Creator Styles */
-        #creator-section {
-            display: none; /* Ẩn ban đầu */
             flex-direction: column;
             align-items: center;
             padding: 20px;
         }
-        .form-group {
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 400px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #00ff7f;
-            font-weight: bold;
-        }
-        input[type="text"],
-        input[type="color"],
-        select,
-        textarea {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #00ff7f;
-            background-color: #333;
-            color: #fff;
-            font-size: 16px;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        input[type="color"] {
-            height: 40px;
-            padding: 5px;
-        }
-        #qr-code-display {
-            width: 250px;
-            height: 250px;
-            border: 2px solid #00ff7f;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            background-color: #fff; /* Nền trắng cho mã QR */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden; /* Đảm bảo QR nằm trong khung */
-        }
-        #qr-code-display canvas {
-            max-width: 100%;
-            max-height: 100%;
-        }
-        #download-qr {
-            background-color: #28a745;
-            margin-top: 10px;
-        }
-        #download-qr:hover {
-            background-color: #218838;
-        }
-        /* Common button style */
-        .action-button {
-            background-color: #007bff;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-        .action-button:hover {
-            background-color: #0056b3;
-        }
+        #video-container { position: relative; width: 100%; max-width: 600px; height: 400px; overflow: hidden; background-color: #000; border-radius: 8px; margin-bottom: 20px; }
+        video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #scanned-text-overlay { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: var(--primary-color); padding: 10px 15px; border-radius: 8px; font-size: 16px; font-weight: bold; text-align: center; max-width: 90%; word-wrap: break-word; border: 1px solid var(--border-color); display: none; }
+        #scan-box { position: absolute; top: 50%; left: 50%; width: 250px; height: 250px; transform: translate(-50%, -50%); border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.5); border-radius: 10px; }
+        #permission-prompt { padding: 20px; text-align: center; }
+        .form-group { margin-bottom: 15px; width: 100%; max-width: 400px; }
+        label { display: block; margin-bottom: 5px; color: var(--primary-color); font-weight: bold; }
+        input[type="text"], input[type="color"], select, textarea { width: calc(100% - 20px); padding: 10px; border-radius: 5px; border: 1px solid var(--border-color); background-color: #333; color: #fff; font-size: 16px; }
+        textarea { resize: vertical; min-height: 80px; }
+        input[type="color"] { height: 40px; padding: 5px; }
+        #qr-code-display { width: 250px; height: 250px; border: 2px solid var(--border-color); margin-top: 20px; margin-bottom: 20px; background-color: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #qr-code-display canvas { max-width: 100%; max-height: 100%; }
+        .action-button { background-color: #007bff; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; }
+        .action-button:hover { background-color: #0056b3; }
+        #download-qr { background-color: #28a745; margin-top: 10px; }
+        #download-qr:hover { background-color: #218838; }
+        #permission-prompt button { background-color: #007bff; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; transition: background-color 0.3s; }
     </style>
 </head>
 <body>
 
-    <div id="main-container">
+    <div id="landing-page">
         <h1>Công cụ QR Code</h1>
+        <div class="button-group">
+            <button id="landing-scan-btn" class="landing-button">Quét QR</button>
+            <button id="landing-create-btn" class="landing-button">Tạo QR</button>
+        </div>
+    </div>
 
+    <div id="main-container">
         <div id="mode-selector">
             <button id="show-scanner">Quét QR</button>
-            <button id="show-creator" class="active">Tạo QR</button>
+            <button id="show-creator">Tạo QR</button>
         </div>
 
         <div id="creator-section">
-            <div class="form-group">
-                <label for="qr-data">Nội dung mã QR:</label>
-                <textarea id="qr-data" placeholder="Nhập văn bản hoặc URL"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="qr-color">Màu mã QR:</label>
-                <input type="color" id="qr-color" value="#000000">
-            </div>
-            <div class="form-group">
-                <label for="qr-background">Màu nền:</label>
-                <input type="color" id="qr-background" value="#ffffff">
-            </div>
-            <div class="form-group">
-                <label for="qr-size">Kích thước (px):</label>
-                <select id="qr-size">
-                    <option value="250">250x250</option>
-                    <option value="300">300x300</option>
-                    <option value="400">400x400</option>
-                    <option value="500">500x500</option>
-                </select>
-            </div>
-
-            <button id="generate-qr" class="action-button">Tạo Mã QR</button>
-
-            <div id="qr-code-display">
-                </div>
-
-            <button id="download-qr" class="action-button" style="display:none;">Tải xuống Mã QR</button>
+             <div class="form-group"> <label for="qr-data">Nội dung mã QR:</label> <textarea id="qr-data" placeholder="Nhập văn bản hoặc URL"></textarea> </div> <div class="form-group"> <label for="qr-color">Màu mã QR:</label> <input type="color" id="qr-color" value="#000000"> </div> <div class="form-group"> <label for="qr-background">Màu nền:</label> <input type="color" id="qr-background" value="#ffffff"> </div> <div class="form-group"> <label for="qr-size">Kích thước (px):</label> <select id="qr-size"> <option value="250">250x250</option> <option value="300">300x300</option> <option value="400">400x400</option> <option value="500">500x500</option> </select> </div> <button id="generate-qr" class="action-button">Tạo Mã QR</button> <div id="qr-code-display"></div> <button id="download-qr" class="action-button" style="display:none;">Tải xuống Mã QR</button>
         </div>
 
         <div id="scanner-section">
-            <div id="permission-prompt">
-                <p>Vui lòng cấp quyền truy cập camera để bắt đầu quét.</p>
-                <button id="start-scan">Bắt đầu quét</button>
-            </div>
-
-            <div id="video-container" style="display:none;">
-                <video id="qr-video"></video>
-                <div id="scan-box"></div>
-                <div id="scanned-text-overlay"></div>
-            </div>
-            
-            <audio id="scan-success-sound" src="https://cdn.jsdelivr.net/gh/hasinhayder/vue-qr-code-scanner-live/public/audio/beep.mp3" preload="auto"></audio>
+            <div id="permission-prompt"> <p>Vui lòng cấp quyền truy cập camera để bắt đầu quét.</p> <button id="start-scan">Bắt đầu quét</button> </div> <div id="video-container" style="display:none;"> <video id="qr-video"></video> <div id="scan-box"></div> <div id="scanned-text-overlay"></div> </div> <audio id="scan-success-sound" src="https://cdn.jsdelivr.net/gh/hasinhayder/vue-qr-code-scanner-live/public/audio/beep.mp3" preload="auto"></audio>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
     <script type="module">
         import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/+esm";
 
-        // ----- Các biến DOM cho cả hai chức năng -----
+        // ----- DOM Elements -----
+        const landingPage = document.getElementById('landing-page');
+        const mainContainer = document.getElementById('main-container');
+        const landingScanBtn = document.getElementById('landing-scan-btn');
+        const landingCreateBtn = document.getElementById('landing-create-btn');
+
         const showScannerButton = document.getElementById('show-scanner');
         const showCreatorButton = document.getElementById('show-creator');
         const scannerSection = document.getElementById('scanner-section');
         const creatorSection = document.getElementById('creator-section');
-
-        // ----- Biến DOM cho phần Scanner -----
+        
+        // ... (các biến DOM còn lại không đổi)
         const videoElem = document.getElementById('qr-video');
         const scannedTextOverlay = document.getElementById('scanned-text-overlay');
         const successSound = document.getElementById('scan-success-sound');
         const startButton = document.getElementById('start-scan');
         const permissionPrompt = document.getElementById('permission-prompt');
         const videoContainer = document.getElementById('video-container');
-
         let scanner;
-
-        // ----- Biến DOM cho phần Creator -----
         const qrDataInput = document.getElementById('qr-data');
         const qrColorInput = document.getElementById('qr-color');
         const qrBackgroundInput = document.getElementById('qr-background');
@@ -287,10 +190,9 @@
         const generateQrButton = document.getElementById('generate-qr');
         const qrCodeDisplay = document.getElementById('qr-code-display');
         const downloadQrButton = document.getElementById('download-qr');
+        let qrcodeInstance;
 
-        let qrcodeInstance; // Để lưu trữ thể hiện của QRCode.js
-
-        // ----- Chức năng chuyển đổi chế độ -----
+        // ----- Chức năng chuyển đổi chế độ chính -----
         function showSection(section) {
             scannerSection.style.display = 'none';
             creatorSection.style.display = 'none';
@@ -300,144 +202,102 @@
             if (section === 'scanner') {
                 scannerSection.style.display = 'flex';
                 showScannerButton.classList.add('active');
-                // Nếu scanner đã khởi tạo, hãy bắt đầu nó
                 if (scanner) {
                     scanner.start();
                 } else {
-                    // Nếu chưa, hiển thị prompt
                     permissionPrompt.style.display = 'block';
                     videoContainer.style.display = 'none';
                 }
             } else if (section === 'creator') {
                 creatorSection.style.display = 'flex';
                 showCreatorButton.classList.add('active');
-                // Nếu scanner đang chạy, hãy dừng nó
                 if (scanner) {
                     scanner.stop();
                 }
             }
         }
+        
+        // ----- Xử lý sự kiện cho màn hình chờ -----
+        landingScanBtn.addEventListener('click', () => {
+            landingPage.style.display = 'none';
+            mainContainer.style.display = 'flex';
+            showSection('scanner');
+        });
 
+        landingCreateBtn.addEventListener('click', () => {
+            landingPage.style.display = 'none';
+            mainContainer.style.display = 'flex';
+            showSection('creator');
+        });
+
+        // ----- Chuyển đổi chế độ bên trong ứng dụng -----
         showScannerButton.addEventListener('click', () => showSection('scanner'));
         showCreatorButton.addEventListener('click', () => showSection('creator'));
 
-        // Mặc định hiển thị chế độ tạo QR
-        showSection('creator');
-
-        // ----- Logic cho QR Scanner -----
+        // ----- Logic cho QR Scanner (Không đổi) -----
         const onScanSuccess = (result) => {
-            scanner.stop(); // Dừng quét sau khi quét thành công
+            scanner.stop();
             const data = result.data;
             scannedTextOverlay.textContent = data;
             scannedTextOverlay.style.display = 'block';
             successSound.play();
-
             if (isUrl(data)) {
                 if (confirm(`Bạn có muốn mở liên kết này không?\n\n${data}`)) {
                     window.open(data, '_blank');
                 }
             }
-            
             setTimeout(() => {
                 scannedTextOverlay.style.display = 'none';
-                scanner.start(); // Tiếp tục quét sau 3 giây
+                scanner.start();
             }, 3000); 
         };
-
-        const onScanError = (err) => {
-            // console.error(err);
-        };
-
-        const isUrl = (string) => {
-            try {
-                new URL(string);
-                return true;
-            } catch (_) {
-                return false;
-            }
-        };
-
+        const onScanError = (err) => {};
+        const isUrl = (string) => { try { new URL(string); return true; } catch (_) { return false; } };
         startButton.addEventListener('click', () => {
             permissionPrompt.style.display = 'none';
             videoContainer.style.display = 'block';
-
-            if (!scanner) { // Chỉ khởi tạo scanner một lần
-                scanner = new QrScanner(
-                    videoElem,
-                    onScanSuccess,
-                    {
-                        onDecodeError: onScanError,
-                        highlightScanRegion: true,
-                        highlightCodeOutline: true,
-                    }
-                );
+            if (!scanner) {
+                scanner = new QrScanner(videoElem, onScanSuccess, { onDecodeError: onScanError, highlightScanRegion: true, highlightCodeOutline: true });
             }
-
             scanner.start().catch(err => {
-                console.error("Không thể khởi động camera:", err);
-                alert("Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập trong cài đặt trình duyệt của bạn.");
+                alert("Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập.");
                 permissionPrompt.style.display = 'block';
                 videoContainer.style.display = 'none';
-                scanner = null; // Reset scanner nếu lỗi
+                scanner = null;
             });
         });
 
-        // ----- Logic cho QR Creator -----
+        // ----- Logic cho QR Creator (Không đổi) -----
         generateQrButton.addEventListener('click', () => {
             const data = qrDataInput.value.trim();
-            if (!data) {
-                alert("Vui lòng nhập nội dung cho mã QR.");
-                return;
-            }
-
+            if (!data) { alert("Vui lòng nhập nội dung cho mã QR."); return; }
             const color = qrColorInput.value;
             const background = qrBackgroundInput.value;
             const size = parseInt(qrSizeSelect.value);
-
-            // Xóa mã QR cũ nếu có
-            qrCodeDisplay.innerHTML = ''; 
+            qrCodeDisplay.innerHTML = '';
             downloadQrButton.style.display = 'none';
-
-            // Tạo mã QR mới
             try {
-                qrcodeInstance = new QRCode(qrCodeDisplay, {
-                    text: data,
-                    width: size,
-                    height: size,
-                    colorDark: color,
-                    colorLight: background,
-                    correctLevel : QRCode.CorrectLevel.H // Mức sửa lỗi cao
-                });
+                qrcodeInstance = new QRCode(qrCodeDisplay, { text: data, width: size, height: size, colorDark: color, colorLight: background, correctLevel : QRCode.CorrectLevel.H });
                 downloadQrButton.style.display = 'block';
-            } catch (e) {
-                console.error("Lỗi khi tạo mã QR:", e);
-                alert("Không thể tạo mã QR. Vui lòng thử lại với nội dung khác.");
-            }
+            } catch (e) { alert("Không thể tạo mã QR."); }
         });
-
         downloadQrButton.addEventListener('click', () => {
             if (qrcodeInstance) {
-                // QRCode.js tạo ra một canvas
                 const canvas = qrCodeDisplay.querySelector('canvas');
                 if (canvas) {
-                    const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+                    const image = canvas.toDataURL("image/png");
                     const link = document.createElement('a');
                     link.download = 'qr_code.png';
                     link.href = image;
-                    document.body.appendChild(link);
                     link.click();
-                    document.body.removeChild(link);
-                } else {
-                    alert("Không tìm thấy mã QR để tải xuống.");
                 }
-            } else {
-                alert("Vui lòng tạo mã QR trước khi tải xuống.");
             }
         });
 
-        // Tự động tạo QR khi trang tải lần đầu (với nội dung mặc định nếu có)
-        qrDataInput.value = "https://me-qr.com/"; // Đặt giá trị mặc định
-        generateQrButton.click(); // Kích hoạt tạo QR ban đầu
+        // Khởi tạo QR mặc định cho phần tạo mã
+        qrDataInput.value = "https://www.google.com/";
+        generateQrButton.click();
+
     </script>
 </body>
 </html>
