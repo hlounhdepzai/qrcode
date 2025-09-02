@@ -1,227 +1,165 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QR Scan</title>
-  <style>
-    :root{
-      --bg: #0f1115; --card:#151823; --text:#e8ecf1; --muted:#93a0b4; --brand:#6ee7b7; --danger:#ff6b6b;
-    }
-    *{box-sizing:border-box}
-    body{margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(120deg,#0b0f14,#10131a 40%,#0b0f14); color:var(--text); min-height:100svh; display:grid; place-items:center;}
-    .wrap{width:min(960px,92vw);}
-    header{display:flex; justify-content:space-between; align-items:center; gap:12px; margin:18px 0 10px}
-    header h1{font-size:clamp(18px,3.6vw,28px); margin:0; letter-spacing:.3px}
-    .card{background:var(--card); border:1px solid #23283a; border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:16px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-
-    .videoWrap{position:relative; border-radius:16px; overflow:hidden; aspect-ratio:3/4; background:#0a0d14}
-    video{width:100%; height:100%; object-fit:cover; background:#000}
-    canvas{position:absolute; inset:0; width:100%; height:100%;}
-
-    .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px}
-    .btn{appearance:none; border:1px solid #2a3047; background:#1b2030; color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600}
-    .btn.primary{background:var(--brand); color:#04110a; border-color:#58cda0}
-    .btn.danger{background:#2a1220; border-color:#522034; color:#ffd6e0}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .switch{display:inline-flex; align-items:center; gap:8px; font-size:14px; color:var(--muted)}
-    .switch input{width:40px; height:22px; appearance:none; border-radius:999px; background:#2a3047; position:relative; outline:none; cursor:pointer}
-    .switch input:checked{background:#1e4438}
-    .switch input::after{content:""; position:absolute; inset:3px auto 3px 3px; width:16px; border-radius:50%; background:#cfd6e6; transition:.2s}
-    .switch input:checked::after{left:21px; background:#baf7de}
-
-    .side{display:flex; flex-direction:column; gap:12px}
-    .hint{color:var(--muted); font-size:14px}
-    .list{max-height:340px; overflow:auto; border:1px dashed #2b3147; border-radius:12px; padding:10px}
-    .item{padding:10px; border-radius:10px; background:#101522; border:1px solid #1e2436; margin:8px 0}
-    .item small{color:var(--muted)}
-    .url{display:block; color:#9ad8ff; text-decoration:none; word-break:break-all; margin-top:6px}
-    .nonurl{color:#ffd28f}
-    .status{font-size:14px; color:var(--muted); margin-left:6px}
-    footer{opacity:.75; font-size:12px; text-align:center; margin:16px 0 24px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #video-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        #scanned-text-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #00ff7f; /* Màu xanh lá cây sáng */
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            max-width: 90%;
+            word-wrap: break-word;
+            border: 1px solid #00ff7f;
+            display: none; /* Ẩn ban đầu */
+        }
+         #scan-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 250px;
+            height: 250px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+        #permission-prompt {
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>📷 Quét QR</h1>
-      <div class="status" id="status">Chưa khởi động camera</div>
-    </header>
 
-    <div class="card grid">
-      <section>
-        <div class="videoWrap">
-          <video id="video" playsinline muted></video>
-          <canvas id="overlay"></canvas>
-        </div>
-        <div class="controls">
-          <button id="startBtn" class="btn primary">Bật quét</button>
-          <button id="stopBtn" class="btn danger" disabled>Tắt</button>
-          <label class="switch" title="Tự mở link nếu nội dung là URL">
-            <input id="autoOpen" type="checkbox" checked>
-            <span>Tự mở link</span>
-          </label>
-          <label class="switch" title="Bật âm thanh thông báo">
-            <input id="soundOn" type="checkbox" checked>
-            <span>Bật tiếng ting</span>
-          </label>
-        </div>
-        <p class="hint">Tip: đưa mã vào khung hình, giữ tay vững 1–2 giây. Nếu không chạy, thử dùng Chrome mới nhất & cho phép quyền camera.</p>
-      </section>
-
-      <aside class="side">
-        <div>
-          <strong>Kết quả gần đây</strong>
-          <div class="list" id="list"></div>
-        </div>
-        <div class="hint">Bảo mật: Tất cả xử lý trên trình duyệt, không gửi dữ liệu đi đâu cả.</div>
-      </aside>
+    <div id="permission-prompt">
+        <h1>Trình quét mã QR</h1>
+        <p>Vui lòng cấp quyền truy cập camera để bắt đầu quét.</p>
+        <button id="start-scan">Bắt đầu quét</button>
     </div>
 
-    <footer> Made by hlounh <code> •Free</code> •Ko Qc </footer>
-  </div>
+    <div id="video-container" style="display:none;">
+        <video id="qr-video"></video>
+        <div id="scan-box"></div>
+        <div id="scanned-text-overlay"></div>
+    </div>
+    
+    <audio id="scan-success-sound" src="https://cdn.jsdelivr.net/gh/hasinhayder/vue-qr-code-scanner-live/public/audio/beep.mp3" preload="auto"></audio>
 
-  <script>
-    // --- Utilities
-    const qs = (s)=>document.querySelector(s);
-    const statusEl = qs('#status');
-    const video = qs('#video');
-    const overlay = qs('#overlay');
-    const ctx = overlay.getContext('2d');
-    const listEl = qs('#list');
-    const startBtn = qs('#startBtn');
-    const stopBtn = qs('#stopBtn');
-    const autoOpenEl = qs('#autoOpen');
-    const soundOnEl = qs('#soundOn');
+    <script type="module">
+        import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/+esm";
 
-    let stream = null;
-    let scanning = false;
-    let rafId = 0;
-    let detector = null;
-    let lastText = '';
-    let lastDingAt = 0;
+        const videoElem = document.getElementById('qr-video');
+        const scannedTextOverlay = document.getElementById('scanned-text-overlay');
+        const successSound = document.getElementById('scan-success-sound');
+        const startButton = document.getElementById('start-scan');
+        const permissionPrompt = document.getElementById('permission-prompt');
+        const videoContainer = document.getElementById('video-container');
 
-    const hasBarcode = 'BarcodeDetector' in window;
+        let scanner;
 
-    function setStatus(t){ statusEl.textContent = t; }
+        const onScanSuccess = (result) => {
+            scanner.stop();
+            const data = result.data;
+            scannedTextOverlay.textContent = data;
+            scannedTextOverlay.style.display = 'block';
+            successSound.play();
 
-    function isProbablyURL(text){
-      try{ const u = new URL(text); return !!u.protocol.startsWith('http'); }catch{ return /^https?:\/\//i.test(text) || /\w+\.[a-z]{2,}/i.test(text); }
-    }
-
-    function addItem(text){
-      const div = document.createElement('div');
-      div.className = 'item';
-      const time = new Date().toLocaleTimeString();
-      div.innerHTML = `<small>${time}</small><br/>` +
-        (isProbablyURL(text) ? `<a class="url" href="${text.startsWith('http')?text:'https://'+text}" target="_blank" rel="noopener">${text}</a>`
-                              : `<span class="nonurl">${text}</span>`);
-      listEl.prepend(div);
-    }
-
-    // --- Sound (WebAudio tiny "ting")
-    let audioCtx;
-    function ding(){
-      if(!soundOnEl.checked) return;
-      const now = performance.now();
-      if(now - lastDingAt < 1200) return; // prevent spam
-      lastDingAt = now;
-      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-      g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
-      o.connect(g).connect(audioCtx.destination);
-      o.start();
-      o.stop(audioCtx.currentTime + 0.28);
-    }
-
-    // --- Camera + Scan
-    async function start(){
-      try{
-        if(!hasBarcode){
-          alert('Thiết bị không hỗ trợ BarcodeDetector. Vui lòng dùng Chrome/Edge/Android mới.');
-          return;
-        }
-        detector = new BarcodeDetector({ formats: ['qr_code'] });
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio:false });
-        video.srcObject = stream;
-        await video.play();
-        resizeCanvas();
-        scanning = true;
-        startBtn.disabled = true; stopBtn.disabled = false;
-        setStatus('Đang quét...');
-        scanLoop();
-      }catch(err){
-        console.error(err);
-        setStatus('Không mở được camera. Hãy kiểm tra quyền truy cập.');
-      }
-    }
-    function stop(){
-      scanning = false;
-      cancelAnimationFrame(rafId);
-      if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
-      ctx.clearRect(0,0,overlay.width,overlay.height);
-      startBtn.disabled = false; stopBtn.disabled = true;
-      setStatus('Đã tắt camera');
-    }
-    function resizeCanvas(){
-      const rect = video.getBoundingClientRect();
-      overlay.width = rect.width * devicePixelRatio;
-      overlay.height = rect.height * devicePixelRatio;
-      overlay.style.width = rect.width + 'px';
-      overlay.style.height = rect.height + 'px';
-      ctx.lineWidth = 4 * devicePixelRatio; ctx.strokeStyle = '#6ee7b7'; ctx.fillStyle = 'rgba(110,231,183,.12)';
-    }
-    window.addEventListener('resize', ()=>{ if(video.videoWidth) resizeCanvas(); });
-
-    async function scanLoop(){
-      if(!scanning) return;
-      try{
-        const barcodes = await detector.detect(video);
-        ctx.clearRect(0,0,overlay.width,overlay.height);
-        if(barcodes.length){
-          for(const code of barcodes){
-            drawBox(code.boundingBox);
-            const text = code.rawValue?.trim();
-            if(text && text !== lastText){
-              lastText = text;
-              addItem(text);
-              ding();
-              if(autoOpenEl.checked && isProbablyURL(text)){
-                const href = text.startsWith('http') ? text : 'https://' + text;
-                // Try open in new tab (user gesture from camera start may allow)
-                window.open(href, '_blank', 'noopener');
-              }
+            // Kiểm tra nếu là một URL hợp lệ
+            if (isUrl(data)) {
+                if (confirm(`Bạn có muốn mở liên kết này không?\n\n${data}`)) {
+                    window.open(data, '_blank');
+                }
             }
-          }
-        }
-      }catch(e){
-        console.debug('detect error', e);
-      }
-      rafId = requestAnimationFrame(scanLoop);
-    }
+            
+            // Tự động quét lại sau một khoảng thời gian
+            setTimeout(() => {
+                scannedTextOverlay.style.display = 'none';
+                scanner.start();
+            }, 3000); // Quét lại sau 3 giây
+        };
 
-    function drawBox(box){
-      // box: {x,y,width,height} in CSS pixels of video element
-      const scaleX = overlay.width / overlay.clientWidth;
-      const scaleY = overlay.height / overlay.clientHeight;
-      const x = box.x * scaleX, y = box.y * scaleY, w = box.width * scaleX, h = box.height * scaleY;
-      ctx.strokeRect(x,y,w,h);
-      ctx.fillRect(x,y,w,h);
-    }
+        const onScanError = (err) => {
+            // console.error(err);
+        };
 
-    // --- Bindings
-    startBtn.addEventListener('click', start);
-    stopBtn.addEventListener('click', stop);
+        const isUrl = (string) => {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        };
 
-    // Quality-of-life: auto-stop when tab hidden
-    document.addEventListener('visibilitychange', ()=>{ if(document.hidden) stop(); });
-  </script>
+        startButton.addEventListener('click', () => {
+            permissionPrompt.style.display = 'none';
+            videoContainer.style.display = 'block';
+
+            scanner = new QrScanner(
+                videoElem,
+                onScanSuccess,
+                {
+                    onDecodeError: onScanError,
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                }
+            );
+
+            scanner.start().catch(err => {
+                console.error("Không thể khởi động camera:", err);
+                alert("Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập trong cài đặt trình duyệt của bạn.");
+                permissionPrompt.style.display = 'block';
+                videoContainer.style.display = 'none';
+            });
+        });
+    </script>
 </body>
 </html>
